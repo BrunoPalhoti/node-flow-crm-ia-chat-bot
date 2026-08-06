@@ -4,7 +4,7 @@ import { logger } from "../config/logger";
 import { AppError } from "../shared/errors/app-error";
 
 export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
-  const correlationId = req.correlationId;
+  const { correlationId } = req;
 
   if (err instanceof AppError) {
     res.status(err.statusCode).json({
@@ -12,7 +12,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
         code: err.code,
         message: err.message,
         ...(err.details !== undefined ? { details: err.details } : {}),
-        ...(correlationId ? { correlationId } : {}),
+        correlationId,
       },
     });
     return;
@@ -24,7 +24,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
         code: "VALIDATION_ERROR",
         message: "Dados inválidos",
         details: z.flattenError(err),
-        ...(correlationId ? { correlationId } : {}),
+        correlationId,
       },
     });
     return;
@@ -36,7 +36,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
     error: {
       code: "INTERNAL_SERVER_ERROR",
       message: "Erro interno do servidor",
-      ...(correlationId ? { correlationId } : {}),
+      correlationId,
     },
   });
 };

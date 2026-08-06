@@ -7,8 +7,8 @@ import { notFoundHandler } from "./middlewares/not-found.middleware";
 export function createApp(): Express {
   const app = express();
 
-  app.use(express.json());
   app.use(correlationIdMiddleware);
+  app.use(express.json());
 
   app.get("/health", (_req, res) => {
     res.status(200).json({
