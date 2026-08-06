@@ -65,16 +65,24 @@ Resposta esperada (`HTTP 200`):
 
 Copie `.env.example` para `.env` e preencha os valores locais. O arquivo `.env` **não** deve ser versionado.
 
-| Variável | Descrição |
-|----------|-----------|
-| `NODE_ENV` | Ambiente (`development`, `test`, `production`) |
-| `PORT` | Porta HTTP (padrão: `3000`) |
-| `LOG_LEVEL` | Nível do Pino (`info`, `debug`, etc.) |
-| `DATABASE_PATH` | Caminho do SQLite |
-| `TYPEBOT_WEBHOOK_SECRET` | Segredo do webhook Typebot |
-| `CRM_API_URL` | URL da API do CRM |
-| `CRM_API_KEY` | Chave da API do CRM |
-| `OPENAI_API_KEY` | Chave da API OpenAI |
+A validação com Zod ocorre na carga do módulo `config/env`: se faltar variável obrigatória ou o valor for inválido, o processo encerra com código `1`.
+
+| Variável | Obrigatória | Descrição |
+|----------|-------------|-----------|
+| `NODE_ENV` | Não (padrão `development`) | Ambiente (`development`, `test`, `production`) |
+| `PORT` | Não (padrão `3000`) | Porta HTTP |
+| `LOG_LEVEL` | Não (padrão `info`) | Nível do Pino |
+| `DATABASE_PATH` | Não (padrão `./data/crm.sqlite`) | Caminho do SQLite |
+| `TYPEBOT_WEBHOOK_SECRET` | **Sim** | Segredo do webhook Typebot |
+| `CRM_API_URL` | **Sim** | URL da API do CRM |
+| `CRM_API_KEY` | **Sim** | Chave da API do CRM |
+| `OPENAI_API_KEY` | **Sim** | Chave da API OpenAI |
+
+## Logs (Pino)
+
+- Cada requisição gera log de **entrada** e **conclusão** com método, rota, status, duração (`durationMs`) e Correlation ID (`x-correlation-id`).
+- Telefone e e-mail são mascarados nos logs (ex.: `***1234`, `j***@dominio.com`).
+- Segredos (`TYPEBOT_WEBHOOK_SECRET`, `CRM_API_KEY`, `OPENAI_API_KEY`, `authorization`, `apiKey`) são substituídos por `[REDACTED]`.
 
 ## Estrutura
 
