@@ -12,7 +12,9 @@ const envSchema = z.object({
     .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
     .default("info"),
   DATABASE_PATH: z.string().min(1).default("./data/crm.sqlite"),
-  TYPEBOT_WEBHOOK_SECRET: z.string().min(1, "TYPEBOT_WEBHOOK_SECRET é obrigatório"),
+  TYPEBOT_WEBHOOK_SECRET: z
+    .string()
+    .min(1, "TYPEBOT_WEBHOOK_SECRET é obrigatório"),
   CRM_API_URL: z.string().url("CRM_API_URL deve ser uma URL válida"),
   CRM_API_KEY: z.string().min(1, "CRM_API_KEY é obrigatório"),
   OPENAI_API_KEY: z.string().min(1, "OPENAI_API_KEY é obrigatório"),

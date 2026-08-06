@@ -19,8 +19,7 @@ export async function initializeDatabase(): Promise<typeof AppDataSource> {
 
   logger.info(
     {
-      database:
-        typeof databasePath === "string" ? databasePath : ":memory:",
+      database: typeof databasePath === "string" ? databasePath : ":memory:",
       driver: AppDataSource.options.type,
     },
     "Database connected",

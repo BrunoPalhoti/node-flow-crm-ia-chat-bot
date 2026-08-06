@@ -17,7 +17,9 @@ const PHONE_KEYS = new Set([
 ]);
 
 function normalizeKey(key: string | number): string {
-  return String(key).toLowerCase().replace(/[-_\s]/g, "");
+  return String(key)
+    .toLowerCase()
+    .replace(/[-_\s]/g, "");
 }
 
 export function isEmailKey(key: string | number): boolean {

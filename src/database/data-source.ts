@@ -18,7 +18,8 @@ const AppDataSource = new DataSource({
     : path.resolve(process.cwd(), env.DATABASE_PATH),
   synchronize: false,
   migrationsRun: false,
-  logging: env.NODE_ENV === "development" ? ["error", "warn", "migration"] : ["error"],
+  logging:
+    env.NODE_ENV === "development" ? ["error", "warn", "migration"] : ["error"],
   entities: [path.join(databaseRoot, "../modules/**/entities/*.{ts,js}")],
   migrations: [path.join(databaseRoot, "migrations/*.{ts,js}")],
 });
