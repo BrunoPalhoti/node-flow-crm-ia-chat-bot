@@ -1,10 +1,14 @@
 import "reflect-metadata";
-import express, { type Express } from "express";
+import express, { type Express, Router } from "express";
+import { correlationIdMiddleware } from "./middlewares/correlation-id.middleware";
+import { errorHandler } from "./middlewares/error-handler.middleware";
+import { notFoundHandler } from "./middlewares/not-found.middleware";
 
 export function createApp(): Express {
   const app = express();
 
   app.use(express.json());
+  app.use(correlationIdMiddleware);
 
   app.get("/health", (_req, res) => {
     res.status(200).json({
@@ -13,6 +17,13 @@ export function createApp(): Express {
       timestamp: new Date().toISOString(),
     });
   });
+
+  const apiRouter = Router();
+
+  app.use("/api/v1", apiRouter);
+
+  app.use(notFoundHandler);
+  app.use(errorHandler);
 
   return app;
 }
