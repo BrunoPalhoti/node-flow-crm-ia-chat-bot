@@ -3,6 +3,8 @@ import { logger } from "../../config/logger";
 import { destroyDatabase, initializeDatabase } from "../initialize";
 import { seeds } from "./index";
 
+process.env.TZ = "UTC";
+
 /**
  * Runner de seeds. Adicione seeds concretos em ./index.ts conforme as entidades existirem.
  */
