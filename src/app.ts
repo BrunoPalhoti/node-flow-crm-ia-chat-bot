@@ -1,9 +1,15 @@
 import "reflect-metadata";
-import express, { type Express } from "express";
+import express, { type Express, Router } from "express";
+import { correlationIdMiddleware } from "./middlewares/correlation-id.middleware";
+import { errorHandler } from "./middlewares/error-handler.middleware";
+import { notFoundHandler } from "./middlewares/not-found.middleware";
+import { requestLoggerMiddleware } from "./middlewares/request-logger.middleware";
 
 export function createApp(): Express {
   const app = express();
 
+  app.use(correlationIdMiddleware);
+  app.use(requestLoggerMiddleware);
   app.use(express.json());
 
   app.get("/health", (_req, res) => {
@@ -13,6 +19,13 @@ export function createApp(): Express {
       timestamp: new Date().toISOString(),
     });
   });
+
+  const apiRouter = Router();
+
+  app.use("/api/v1", apiRouter);
+
+  app.use(notFoundHandler);
+  app.use(errorHandler);
 
   return app;
 }

@@ -25,6 +25,25 @@ A API sobe em `http://localhost:3000` (porta configurável via `PORT`).
 | `npm run build` | Compila TypeScript para `dist/` |
 | `npm start` | Executa a build de produção |
 | `npm run typecheck` | Verifica tipos sem emitir arquivos |
+| `npm run migration:run` | Aplica migrations pendentes |
+| `npm run migration:revert` | Reverte a última migration |
+| `npm run migration:show` | Lista status das migrations |
+| `npm run migration:create` | Cria arquivo de migration vazio |
+| `npm run migration:generate` | Gera migration a partir do diff das entidades |
+| `npm run seed` | Executa seeds |
+
+## Persistência (TypeORM + SQLite)
+
+- Caminho do banco: `DATABASE_PATH` (padrão `./data/crm.sqlite`)
+- `synchronize` desabilitado — o schema só muda via migrations
+- Datas da aplicação em **UTC** (`TZ=UTC` nos scripts e no bootstrap)
+- Na inicialização, a API conecta ao SQLite antes de aceitar requisições
+
+```bash
+npm run migration:run
+npm run migration:revert
+npm run seed
+```
 
 ## Health check
 
@@ -46,16 +65,24 @@ Resposta esperada (`HTTP 200`):
 
 Copie `.env.example` para `.env` e preencha os valores locais. O arquivo `.env` **não** deve ser versionado.
 
-| Variável | Descrição |
-|----------|-----------|
-| `NODE_ENV` | Ambiente (`development`, `test`, `production`) |
-| `PORT` | Porta HTTP (padrão: `3000`) |
-| `LOG_LEVEL` | Nível do Pino (`info`, `debug`, etc.) |
-| `DATABASE_PATH` | Caminho do SQLite |
-| `TYPEBOT_WEBHOOK_SECRET` | Segredo do webhook Typebot |
-| `CRM_API_URL` | URL da API do CRM |
-| `CRM_API_KEY` | Chave da API do CRM |
-| `OPENAI_API_KEY` | Chave da API OpenAI |
+A validação com Zod ocorre na carga do módulo `config/env`: se faltar variável obrigatória ou o valor for inválido, o processo encerra com código `1`.
+
+| Variável | Obrigatória | Descrição |
+|----------|-------------|-----------|
+| `NODE_ENV` | Não (padrão `development`) | Ambiente (`development`, `test`, `production`) |
+| `PORT` | Não (padrão `3000`) | Porta HTTP |
+| `LOG_LEVEL` | Não (padrão `info`) | Nível do Pino |
+| `DATABASE_PATH` | Não (padrão `./data/crm.sqlite`) | Caminho do SQLite |
+| `TYPEBOT_WEBHOOK_SECRET` | **Sim** | Segredo do webhook Typebot |
+| `CRM_API_URL` | **Sim** | URL da API do CRM |
+| `CRM_API_KEY` | **Sim** | Chave da API do CRM |
+| `OPENAI_API_KEY` | **Sim** | Chave da API OpenAI |
+
+## Logs (Pino)
+
+- Cada requisição gera log de **entrada** e **conclusão** com método, rota, status, duração (`durationMs`) e Correlation ID (`x-correlation-id`).
+- Telefone e e-mail são mascarados nos logs (ex.: `***1234`, `j***@dominio.com`).
+- Segredos (`TYPEBOT_WEBHOOK_SECRET`, `CRM_API_KEY`, `OPENAI_API_KEY`, `authorization`, `apiKey`) são substituídos por `[REDACTED]`.
 
 ## Estrutura
 
@@ -64,7 +91,7 @@ src/
 ├── app.ts              # App Express e rotas base
 ├── server.ts           # Bootstrap do servidor
 ├── config/             # Env (Zod) e logger (Pino)
-├── database/           # TypeORM / SQLite
+├── database/           # DataSource, migrations e seeds
 ├── modules/            # Domínios da aplicação
 ├── providers/          # Integrações externas
 └── shared/             # Utilitários compartilhados
@@ -73,7 +100,7 @@ src/
 ## Stack
 
 - **Express** — HTTP
-- **TypeORM** + **SQLite** — persistência
+- **TypeORM** + **better-sqlite3** — persistência
 - **Zod** — validação de env e payloads
 - **Pino** — logs
 - **Axios** — clientes HTTP
