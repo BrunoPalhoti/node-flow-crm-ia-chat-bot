@@ -1,0 +1,8 @@
+dist
+coverage
+node_modules
+data
+package-lock.json
+*.sqlite
+*.sqlite3
+*.db

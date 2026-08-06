@@ -1,0 +1,9 @@
+process.env.TZ = "UTC";
+process.env.NODE_ENV = "test";
+process.env.LOG_LEVEL = "silent";
+process.env.PORT = "3000";
+process.env.DATABASE_PATH = "./data/test-crm.sqlite";
+process.env.TYPEBOT_WEBHOOK_SECRET = "test-typebot-webhook-secret";
+process.env.CRM_API_URL = "https://crm.example.local";
+process.env.CRM_API_KEY = "test-crm-api-key";
+process.env.OPENAI_API_KEY = "test-openai-api-key";

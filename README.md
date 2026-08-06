@@ -19,18 +19,25 @@ A API sobe em `http://localhost:3000` (porta configurável via `PORT`).
 
 ## Scripts
 
-| Comando | Descrição |
-|---------|-----------|
-| `npm run dev` | Desenvolvimento com hot reload (`tsx watch`) |
-| `npm run build` | Compila TypeScript para `dist/` |
-| `npm start` | Executa a build de produção |
-| `npm run typecheck` | Verifica tipos sem emitir arquivos |
-| `npm run migration:run` | Aplica migrations pendentes |
-| `npm run migration:revert` | Reverte a última migration |
-| `npm run migration:show` | Lista status das migrations |
-| `npm run migration:create` | Cria arquivo de migration vazio |
+| Comando                      | Descrição                                     |
+| ---------------------------- | --------------------------------------------- |
+| `npm run dev`                | Desenvolvimento com hot reload (`tsx watch`)  |
+| `npm run build`              | Compila TypeScript para `dist/`               |
+| `npm start`                  | Executa a build de produção                   |
+| `npm run typecheck`          | Verifica tipos sem emitir arquivos            |
+| `npm run lint`               | Executa o ESLint                              |
+| `npm run lint:fix`           | Corrige problemas de lint automaticamente     |
+| `npm run format`             | Formata o código com Prettier                 |
+| `npm run format:check`       | Verifica formatação sem alterar arquivos      |
+| `npm run test`               | Executa a suíte de testes (Vitest)            |
+| `npm run test:watch`         | Executa testes em modo watch                  |
+| `npm run test:coverage`      | Executa testes com relatório de cobertura     |
+| `npm run migration:run`      | Aplica migrations pendentes                   |
+| `npm run migration:revert`   | Reverte a última migration                    |
+| `npm run migration:show`     | Lista status das migrations                   |
+| `npm run migration:create`   | Cria arquivo de migration vazio               |
 | `npm run migration:generate` | Gera migration a partir do diff das entidades |
-| `npm run seed` | Executa seeds |
+| `npm run seed`               | Executa seeds                                 |
 
 ## Persistência (TypeORM + SQLite)
 
@@ -67,16 +74,16 @@ Copie `.env.example` para `.env` e preencha os valores locais. O arquivo `.env` 
 
 A validação com Zod ocorre na carga do módulo `config/env`: se faltar variável obrigatória ou o valor for inválido, o processo encerra com código `1`.
 
-| Variável | Obrigatória | Descrição |
-|----------|-------------|-----------|
-| `NODE_ENV` | Não (padrão `development`) | Ambiente (`development`, `test`, `production`) |
-| `PORT` | Não (padrão `3000`) | Porta HTTP |
-| `LOG_LEVEL` | Não (padrão `info`) | Nível do Pino |
-| `DATABASE_PATH` | Não (padrão `./data/crm.sqlite`) | Caminho do SQLite |
-| `TYPEBOT_WEBHOOK_SECRET` | **Sim** | Segredo do webhook Typebot |
-| `CRM_API_URL` | **Sim** | URL da API do CRM |
-| `CRM_API_KEY` | **Sim** | Chave da API do CRM |
-| `OPENAI_API_KEY` | **Sim** | Chave da API OpenAI |
+| Variável                 | Obrigatória                      | Descrição                                      |
+| ------------------------ | -------------------------------- | ---------------------------------------------- |
+| `NODE_ENV`               | Não (padrão `development`)       | Ambiente (`development`, `test`, `production`) |
+| `PORT`                   | Não (padrão `3000`)              | Porta HTTP                                     |
+| `LOG_LEVEL`              | Não (padrão `info`)              | Nível do Pino                                  |
+| `DATABASE_PATH`          | Não (padrão `./data/crm.sqlite`) | Caminho do SQLite                              |
+| `TYPEBOT_WEBHOOK_SECRET` | **Sim**                          | Segredo do webhook Typebot                     |
+| `CRM_API_URL`            | **Sim**                          | URL da API do CRM                              |
+| `CRM_API_KEY`            | **Sim**                          | Chave da API do CRM                            |
+| `OPENAI_API_KEY`         | **Sim**                          | Chave da API OpenAI                            |
 
 ## Logs (Pino)
 
@@ -95,7 +102,19 @@ src/
 ├── modules/            # Domínios da aplicação
 ├── providers/          # Integrações externas
 └── shared/             # Utilitários compartilhados
+tests/                  # Testes automatizados (Vitest)
 ```
+
+## Qualidade
+
+```bash
+npm run lint
+npm run test
+npm run test:coverage
+npm run build
+```
+
+O health check possui teste automatizado em `tests/health.test.ts`.
 
 ## Stack
 
@@ -105,3 +124,5 @@ src/
 - **Pino** — logs
 - **Axios** — clientes HTTP
 - **dotenv** — variáveis de ambiente
+- **ESLint** + **Prettier** — lint e formatação
+- **Vitest** — testes e cobertura
