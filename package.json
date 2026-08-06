@@ -4,10 +4,17 @@
   "description": "API Node.js para CRM automotivo com Typebot, IA e RAG",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "TZ=UTC tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/server.js",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "start": "TZ=UTC node dist/server.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typeorm": "TZ=UTC tsx ./node_modules/typeorm/cli.js",
+    "migration:create": "npm run typeorm -- migration:create src/database/migrations/Migration",
+    "migration:generate": "npm run typeorm -- migration:generate src/database/migrations/Migration -d src/database/data-source.ts",
+    "migration:run": "npm run typeorm -- migration:run -d src/database/data-source.ts",
+    "migration:revert": "npm run typeorm -- migration:revert -d src/database/data-source.ts",
+    "migration:show": "npm run typeorm -- migration:show -d src/database/data-source.ts",
+    "seed": "TZ=UTC tsx src/database/seeds/run-seed.ts"
   },
   "keywords": [
     "crm",
@@ -21,15 +28,16 @@
   "type": "commonjs",
   "dependencies": {
     "axios": "^1.19.0",
+    "better-sqlite3": "^12.11.1",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "pino": "^10.3.1",
     "reflect-metadata": "^0.2.2",
-    "sqlite3": "^6.0.1",
     "typeorm": "^1.1.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
     "@types/express": "^5.0.6",
     "@types/node": "^26.1.2",
     "pino-pretty": "^13.1.3",

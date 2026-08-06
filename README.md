@@ -25,6 +25,25 @@ A API sobe em `http://localhost:3000` (porta configurável via `PORT`).
 | `npm run build` | Compila TypeScript para `dist/` |
 | `npm start` | Executa a build de produção |
 | `npm run typecheck` | Verifica tipos sem emitir arquivos |
+| `npm run migration:run` | Aplica migrations pendentes |
+| `npm run migration:revert` | Reverte a última migration |
+| `npm run migration:show` | Lista status das migrations |
+| `npm run migration:create` | Cria arquivo de migration vazio |
+| `npm run migration:generate` | Gera migration a partir do diff das entidades |
+| `npm run seed` | Executa seeds |
+
+## Persistência (TypeORM + SQLite)
+
+- Caminho do banco: `DATABASE_PATH` (padrão `./data/crm.sqlite`)
+- `synchronize` desabilitado — o schema só muda via migrations
+- Datas da aplicação em **UTC** (`TZ=UTC` nos scripts e no bootstrap)
+- Na inicialização, a API conecta ao SQLite antes de aceitar requisições
+
+```bash
+npm run migration:run
+npm run migration:revert
+npm run seed
+```
 
 ## Health check
 
@@ -64,7 +83,7 @@ src/
 ├── app.ts              # App Express e rotas base
 ├── server.ts           # Bootstrap do servidor
 ├── config/             # Env (Zod) e logger (Pino)
-├── database/           # TypeORM / SQLite
+├── database/           # DataSource, migrations e seeds
 ├── modules/            # Domínios da aplicação
 ├── providers/          # Integrações externas
 └── shared/             # Utilitários compartilhados
@@ -73,7 +92,7 @@ src/
 ## Stack
 
 - **Express** — HTTP
-- **TypeORM** + **SQLite** — persistência
+- **TypeORM** + **better-sqlite3** — persistência
 - **Zod** — validação de env e payloads
 - **Pino** — logs
 - **Axios** — clientes HTTP
