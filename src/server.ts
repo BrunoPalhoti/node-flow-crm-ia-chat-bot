@@ -20,10 +20,24 @@ async function bootstrap(): Promise<void> {
 
   const shutdown = async (signal: string): Promise<void> => {
     logger.info({ signal }, "Shutting down");
-    server.close(async () => {
+
+    try {
+      await new Promise<void>((resolve, reject) => {
+        server.close((err) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          resolve();
+        });
+      });
+
       await destroyDatabase();
       process.exit(0);
-    });
+    } catch (error: unknown) {
+      logger.error({ err: error }, "Error during shutdown");
+      process.exit(1);
+    }
   };
 
   process.once("SIGINT", () => {
