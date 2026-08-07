@@ -1,0 +1,46 @@
+@baseUrl = http://localhost:3000
+
+### Health
+GET {{baseUrl}}/health
+
+### Typebot lead — com veículo (sucesso 202)
+POST {{baseUrl}}/api/v1/integrations/typebot/leads
+Content-Type: application/json
+
+{
+  "submittedAt": "7 de ago., 10:23",
+  "nome": "Bruno",
+  "celular": "(11) 99999-9999",
+  "email": "bruno@email.com",
+  "temVeiculo": "Sim",
+  "tipoVeiculo": "Carro",
+  "marcaModelo": "Chevrolet Onix Plus",
+  "anoVeiculo": "2022",
+  "estiloVeiculoDesejado": "SUV",
+  "valorVeiculoDesejado": "R$ 80 a 120 mil",
+  "descricaoVeiculoDesejado": "Quero um carro econômico e confortável para viajar."
+}
+
+### Typebot lead — sem veículo (sucesso 202)
+POST {{baseUrl}}/api/v1/integrations/typebot/leads
+Content-Type: application/json
+
+{
+  "submittedAt": "7 de ago., 10:23",
+  "nome": "Ana",
+  "celular": "(21) 98888-7777",
+  "email": "ana@email.com",
+  "temVeiculo": "Não",
+  "estiloVeiculoDesejado": "Hatch",
+  "valorVeiculoDesejado": "Até R$ 60 mil",
+  "descricaoVeiculoDesejado": "Preciso de um carro compacto para o dia a dia."
+}
+
+### Typebot lead — validação (400)
+POST {{baseUrl}}/api/v1/integrations/typebot/leads
+Content-Type: application/json
+
+{
+  "submittedAt": "7 de ago., 10:23",
+  "temVeiculo": "Sim"
+}
