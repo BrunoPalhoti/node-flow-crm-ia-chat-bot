@@ -118,4 +118,9 @@ export const REDACT_PATHS = [
   "headers.x-api-key",
   "*.headers.authorization",
   "*.headers.x-api-key",
+  "headers.x-integration-key",
+  "req.headers.x-integration-key",
+  "*.headers.x-integration-key",
+  "x-integration-key",
+  "*.x-integration-key",
 ] as const;
