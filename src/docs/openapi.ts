@@ -47,6 +47,14 @@ const validationErrorExample = {
   },
 };
 
+const unauthorizedErrorExample = {
+  error: {
+    code: "UNAUTHORIZED",
+    message: "Credencial ausente ou inválida",
+    correlationId: "550e8400-e29b-41d4-a716-446655440000",
+  },
+};
+
 export const openApiDocument = {
   openapi: "3.0.3",
   info: {
@@ -104,12 +112,24 @@ export const openApiDocument = {
         summary: "Capturar lead do Typebot",
         description:
           "Recebe a submissão do Typebot, valida o contrato v1 e aceita o payload. " +
+          "Exige o header X-Integration-Key com o valor de TYPEBOT_WEBHOOK_SECRET. " +
           "Campos obrigatórios: submittedAt, nome, celular, email, temVeiculo, " +
           "estiloVeiculoDesejado, valorVeiculoDesejado, descricaoVeiculoDesejado. " +
           "Quando temVeiculo = Sim, também são obrigatórios: tipoVeiculo, marcaModelo e anoVeiculo. " +
           "Campos futuros podem ser enviados, mas não são obrigatórios. " +
           "Mudanças incompatíveis devem usar uma nova versão da rota.",
         operationId: "createTypebotLeadV1",
+        security: [{ IntegrationKey: [] }],
+        parameters: [
+          {
+            name: "X-Integration-Key",
+            in: "header",
+            required: true,
+            description:
+              "Chave de integração (TYPEBOT_WEBHOOK_SECRET). Nunca é ecoada em logs ou respostas.",
+            schema: { type: "string" },
+          },
+        ],
         requestBody: {
           required: true,
           content: {
@@ -153,11 +173,31 @@ export const openApiDocument = {
               },
             },
           },
+          "401": {
+            description: "Credencial ausente ou inválida",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/ApiErrorResponse",
+                },
+                example: unauthorizedErrorExample,
+              },
+            },
+          },
         },
       },
     },
   },
   components: {
+    securitySchemes: {
+      IntegrationKey: {
+        type: "apiKey",
+        in: "header",
+        name: "X-Integration-Key",
+        description:
+          "Deve coincidir com TYPEBOT_WEBHOOK_SECRET. O valor nunca é retornado pela API.",
+      },
+    },
     schemas: {
       TypebotLeadRequest: {
         type: "object",

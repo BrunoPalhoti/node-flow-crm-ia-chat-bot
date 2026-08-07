@@ -1,4 +1,6 @@
 @baseUrl = http://localhost:3000
+# Mesmo valor de TYPEBOT_WEBHOOK_SECRET no .env
+# (alguns clientes HTTP não expandem {{variavel}} — use o valor literal no header)
 
 ### Health
 GET {{baseUrl}}/health
@@ -6,6 +8,7 @@ GET {{baseUrl}}/health
 ### Typebot lead — com veículo (sucesso 202)
 POST {{baseUrl}}/api/v1/integrations/typebot/leads
 Content-Type: application/json
+X-Integration-Key: change-me-typebot-webhook-secret
 
 {
   "submittedAt": "7 de ago., 10:23",
@@ -24,6 +27,38 @@ Content-Type: application/json
 ### Typebot lead — sem veículo (sucesso 202)
 POST {{baseUrl}}/api/v1/integrations/typebot/leads
 Content-Type: application/json
+X-Integration-Key: change-me-typebot-webhook-secret
+
+{
+  "submittedAt": "7 de ago., 10:23",
+  "nome": "Ana",
+  "celular": "(21) 98888-7777",
+  "email": "ana@email.com",
+  "temVeiculo": "Não",
+  "estiloVeiculoDesejado": "Hatch",
+  "valorVeiculoDesejado": "Até R$ 60 mil",
+  "descricaoVeiculoDesejado": "Preciso de um carro compacto para o dia a dia."
+}
+
+### Typebot lead — sem chave (401)
+POST {{baseUrl}}/api/v1/integrations/typebot/leads
+Content-Type: application/json
+
+{
+  "submittedAt": "7 de ago., 10:23",
+  "nome": "Ana",
+  "celular": "(21) 98888-7777",
+  "email": "ana@email.com",
+  "temVeiculo": "Não",
+  "estiloVeiculoDesejado": "Hatch",
+  "valorVeiculoDesejado": "Até R$ 60 mil",
+  "descricaoVeiculoDesejado": "Preciso de um carro compacto para o dia a dia."
+}
+
+### Typebot lead — chave inválida (401)
+POST {{baseUrl}}/api/v1/integrations/typebot/leads
+Content-Type: application/json
+X-Integration-Key: chave-invalida
 
 {
   "submittedAt": "7 de ago., 10:23",
@@ -39,6 +74,7 @@ Content-Type: application/json
 ### Typebot lead — validação (400)
 POST {{baseUrl}}/api/v1/integrations/typebot/leads
 Content-Type: application/json
+X-Integration-Key: change-me-typebot-webhook-secret
 
 {
   "submittedAt": "7 de ago., 10:23",

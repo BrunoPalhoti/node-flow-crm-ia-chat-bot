@@ -77,7 +77,7 @@ Resposta esperada (`HTTP 200`):
 
 `POST /api/v1/integrations/typebot/leads`
 
-Captura versionada do lead enviado pelo Typebot. Propriedades sem espaço e sem acento. Campos futuros podem ser enviados, mas **não** são obrigatórios. Mudanças incompatíveis devem usar nova versão da rota (ex.: `/api/v2/...`).
+Captura versionada do lead enviado pelo Typebot. Exige o header `X-Integration-Key` com o valor de `TYPEBOT_WEBHOOK_SECRET` (ausência ou valor inválido → `401`). A chave nunca é ecoada em logs, payloads persistidos ou respostas. Propriedades sem espaço e sem acento. Campos futuros podem ser enviados, mas **não** são obrigatórios. Mudanças incompatíveis devem usar nova versão da rota (ex.: `/api/v2/...`).
 
 ### Campos
 
@@ -100,6 +100,7 @@ Captura versionada do lead enviado pelo Typebot. Propriedades sem espaço e sem 
 ```bash
 curl -X POST http://localhost:3000/api/v1/integrations/typebot/leads \
   -H "Content-Type: application/json" \
+  -H "X-Integration-Key: $TYPEBOT_WEBHOOK_SECRET" \
   -d '{
     "submittedAt": "7 de ago., 10:23",
     "nome": "Bruno",
@@ -152,7 +153,7 @@ A validação com Zod ocorre na carga do módulo `config/env`: se faltar variáv
 | `PORT`                   | Não (padrão `3000`)              | Porta HTTP                                     |
 | `LOG_LEVEL`              | Não (padrão `info`)              | Nível do Pino                                  |
 | `DATABASE_PATH`          | Não (padrão `./data/crm.sqlite`) | Caminho do SQLite                              |
-| `TYPEBOT_WEBHOOK_SECRET` | **Sim**                          | Segredo do webhook Typebot                     |
+| `TYPEBOT_WEBHOOK_SECRET` | **Sim**                          | Valor esperado no header `X-Integration-Key`   |
 | `CRM_API_URL`            | **Sim**                          | URL da API do CRM                              |
 | `CRM_API_KEY`            | **Sim**                          | Chave da API do CRM                            |
 | `OPENAI_API_KEY`         | **Sim**                          | Chave da API OpenAI                            |
@@ -161,7 +162,7 @@ A validação com Zod ocorre na carga do módulo `config/env`: se faltar variáv
 
 - Cada requisição gera log de **entrada** e **conclusão** com método, rota, status, duração (`durationMs`) e Correlation ID (`x-correlation-id`).
 - Telefone e e-mail são mascarados nos logs (ex.: `***1234`, `j***@dominio.com`).
-- Segredos (`TYPEBOT_WEBHOOK_SECRET`, `CRM_API_KEY`, `OPENAI_API_KEY`, `authorization`, `apiKey`) são substituídos por `[REDACTED]`.
+- Segredos (`TYPEBOT_WEBHOOK_SECRET`, `CRM_API_KEY`, `OPENAI_API_KEY`, `authorization`, `apiKey`, `x-integration-key`) são substituídos por `[REDACTED]`.
 
 ## Estrutura
 

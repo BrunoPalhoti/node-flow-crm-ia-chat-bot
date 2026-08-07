@@ -20,6 +20,7 @@ export const createTypebotLead: RequestHandler = (req, res, next) => {
 
     res.status(202).json(payload);
   } catch (err) {
+    console.error("Error:", err);
     next(err);
   }
 };
