@@ -7,7 +7,8 @@ import {
 
 export const createTypebotLead: RequestHandler = (req, res, next) => {
   try {
-    typebotLeadRequestSchema.parse(req.body);
+    const leadInput = typebotLeadRequestSchema.parse(req.body);
+    console.log("leadInput:", leadInput);
 
     const payload = apiSuccessResponse<TypebotLeadAcceptedResponse>(
       {
