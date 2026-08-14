@@ -1,9 +1,11 @@
 import "reflect-metadata";
 import express, { type Express, Router } from "express";
+import { setupSwagger } from "./docs/swagger";
 import { correlationIdMiddleware } from "./middlewares/correlation-id.middleware";
 import { errorHandler } from "./middlewares/error-handler.middleware";
 import { notFoundHandler } from "./middlewares/not-found.middleware";
 import { requestLoggerMiddleware } from "./middlewares/request-logger.middleware";
+import { typebotRoutes } from "./modules/integrations/typebot/typebot.routes";
 
 export function createApp(): Express {
   const app = express();
@@ -11,6 +13,8 @@ export function createApp(): Express {
   app.use(correlationIdMiddleware);
   app.use(requestLoggerMiddleware);
   app.use(express.json());
+
+  setupSwagger(app);
 
   app.get("/health", (_req, res) => {
     res.status(200).json({
@@ -21,6 +25,7 @@ export function createApp(): Express {
   });
 
   const apiRouter = Router();
+  apiRouter.use("/integrations/typebot", typebotRoutes);
 
   app.use("/api/v1", apiRouter);
 
