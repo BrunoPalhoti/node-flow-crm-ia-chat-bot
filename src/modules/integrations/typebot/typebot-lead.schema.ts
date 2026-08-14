@@ -2,15 +2,41 @@ import { z } from "zod";
 
 const nonEmptyString = z.string().trim().min(1, "Campo obrigatório");
 
+const TEM_VEICULO_ERROR = 'temVeiculo deve ser "Sim" ou "Não"';
+
+function canonicalizeTemVeiculo(value: string): "Sim" | "Não" | string {
+  const normalized = value
+    .trim()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase();
+
+  if (normalized === "sim") {
+    return "Sim";
+  }
+
+  if (normalized === "nao") {
+    return "Não";
+  }
+
+  return value;
+}
+
+const temVeiculoSchema = z.preprocess(
+  (value) =>
+    typeof value === "string" ? canonicalizeTemVeiculo(value) : value,
+  z.enum(["Sim", "Não"], {
+    error: TEM_VEICULO_ERROR,
+  }),
+);
+
 export const typebotLeadRequestSchema = z
   .object({
     submittedAt: nonEmptyString,
     nome: nonEmptyString,
     celular: nonEmptyString,
     email: nonEmptyString,
-    temVeiculo: z.enum(["Sim", "Não"], {
-      error: 'temVeiculo deve ser "Sim" ou "Não"',
-    }),
+    temVeiculo: temVeiculoSchema,
     tipoVeiculo: z.string().trim().optional(),
     marcaModelo: z.string().trim().optional(),
     anoVeiculo: z.string().trim().optional(),

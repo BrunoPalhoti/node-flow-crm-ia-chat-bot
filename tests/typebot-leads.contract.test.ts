@@ -116,6 +116,81 @@ describe("POST /api/v1/integrations/typebot/leads", () => {
     );
   });
 
+  it.each(["sim", "SIM", "Sim"])(
+    "aceita temVeiculo=%s como Sim",
+    async (temVeiculo) => {
+      const app = createApp();
+
+      const response = await withIntegrationKey(
+        request(app).post("/api/v1/integrations/typebot/leads"),
+      ).send({
+        ...validPayloadWithVehicle,
+        temVeiculo,
+      });
+
+      expect(response.status).toBe(202);
+      expect(response.body.data.accepted).toBe(true);
+    },
+  );
+
+  it.each(["nao", "NAO", "não", "NÃO", "Não"])(
+    "aceita temVeiculo=%s como Não",
+    async (temVeiculo) => {
+      const app = createApp();
+
+      const response = await withIntegrationKey(
+        request(app).post("/api/v1/integrations/typebot/leads"),
+      ).send({
+        ...validPayloadWithoutVehicle,
+        temVeiculo,
+      });
+
+      expect(response.status).toBe(202);
+      expect(response.body.data.accepted).toBe(true);
+    },
+  );
+
+  it("rejeita temVeiculo inválido no próprio campo", async () => {
+    const app = createApp();
+
+    const response = await withIntegrationKey(
+      request(app).post("/api/v1/integrations/typebot/leads"),
+    ).send({
+      ...validPayloadWithoutVehicle,
+      temVeiculo: "talvez",
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe("VALIDATION_ERROR");
+    expect(response.body.error.details.fieldErrors).toEqual(
+      expect.objectContaining({
+        temVeiculo: expect.arrayContaining([
+          'temVeiculo deve ser "Sim" ou "Não"',
+        ]),
+      }),
+    );
+  });
+
+  it("usa o valor canônico Sim no superRefine (sim sem detalhes do veículo)", async () => {
+    const app = createApp();
+
+    const response = await withIntegrationKey(
+      request(app).post("/api/v1/integrations/typebot/leads"),
+    ).send({
+      ...validPayloadWithoutVehicle,
+      temVeiculo: "sim",
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.details.fieldErrors).toEqual(
+      expect.objectContaining({
+        tipoVeiculo: expect.any(Array),
+        marcaModelo: expect.any(Array),
+        anoVeiculo: expect.any(Array),
+      }),
+    );
+  });
+
   it("exige tipo/marcaModelo/ano quando temVeiculo = Sim", async () => {
     const app = createApp();
 
