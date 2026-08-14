@@ -1,9 +1,12 @@
 import { z } from "zod";
+import { utcCalendarYear } from "../../../shared/date/utc";
 
 const FIELD_TOO_LONG = "Campo excede o tamanho máximo";
 const EMAIL_INVALID = "E-mail em formato inválido";
 const CELULAR_INVALID = "Celular em formato inválido";
 const TEM_VEICULO_ERROR = 'temVeiculo deve ser "Sim" ou "Não"';
+const ANO_VEICULO_INVALID = "Ano do veículo inválido";
+const MIN_VEHICLE_YEAR = 1900;
 
 const FIELD_MAX = {
   submittedAt: 80,
@@ -46,6 +49,21 @@ function canonicalizeTemVeiculo(value: string): "Sim" | "Não" | string {
 function hasBasicPhoneDigitCount(value: string): boolean {
   const digits = value.replace(/\D/g, "");
   return digits.length >= 10 && digits.length <= 13;
+}
+
+function isPlausibleVehicleYear(value: string): boolean {
+  if (!/^\d+$/.test(value)) {
+    return false;
+  }
+
+  const year = Number(value);
+
+  if (!Number.isInteger(year)) {
+    return false;
+  }
+
+  const maxYear = utcCalendarYear() + 1;
+  return year >= MIN_VEHICLE_YEAR && year <= maxYear;
 }
 
 const submittedAtSchema = requiredString(FIELD_MAX.submittedAt);
@@ -105,6 +123,15 @@ function refineVehicleDetailsWhenOwned(
         message: `${field} é obrigatório quando temVeiculo = Sim`,
       });
     }
+  }
+
+  const year = data.anoVeiculo?.trim();
+  if (year && !isPlausibleVehicleYear(year)) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["anoVeiculo"],
+      message: ANO_VEICULO_INVALID,
+    });
   }
 }
 

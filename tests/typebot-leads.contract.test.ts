@@ -9,6 +9,7 @@ import {
 } from "../src/database";
 import {
   WEBHOOK_EVENT_TYPEBOT_LEAD_UNAUTHORIZED,
+  WEBHOOK_EVENT_TYPEBOT_LEAD_VALIDATION_FAILED,
   WEBHOOK_PROCESSING_REJECTED,
 } from "../src/modules/chatbot/chatbot-webhook-log.service";
 import { ChatbotWebhookLog } from "../src/modules/chatbot/entities/chatbot-webhook-log.entity";
@@ -379,6 +380,57 @@ describe("POST /api/v1/integrations/typebot/leads", () => {
     );
   });
 
+  it.each(["22", "2022.0", "2022a", "1899"])(
+    "rejeita anoVeiculo=%s sem corrigir o valor",
+    async (anoVeiculo) => {
+      const app = createApp();
+
+      const response = await withIntegrationKey(
+        request(app).post("/api/v1/integrations/typebot/leads"),
+      ).send({
+        ...validPayloadWithVehicle,
+        anoVeiculo,
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error.details.fieldErrors).toEqual(
+        expect.objectContaining({
+          anoVeiculo: expect.arrayContaining(["Ano do veículo inválido"]),
+        }),
+      );
+    },
+  );
+
+  it("aceita anoVeiculo inteiro plausível", async () => {
+    const app = createApp();
+
+    const response = await withIntegrationKey(
+      request(app).post("/api/v1/integrations/typebot/leads"),
+    ).send({
+      ...validPayloadWithVehicle,
+      anoVeiculo: "2022",
+    });
+
+    expect(response.status).toBe(202);
+  });
+
+  it("rejeita anoVeiculo acima do teto UTC+1", async () => {
+    const app = createApp();
+    const tooFar = String(new Date().getUTCFullYear() + 2);
+
+    const response = await withIntegrationKey(
+      request(app).post("/api/v1/integrations/typebot/leads"),
+    ).send({
+      ...validPayloadWithVehicle,
+      anoVeiculo: tooFar,
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.details.fieldErrors.anoVeiculo).toEqual(
+      expect.arrayContaining(["Ano do veículo inválido"]),
+    );
+  });
+
   it("retorna 401 sem X-Integration-Key", async () => {
     const app = createApp();
 
@@ -430,7 +482,7 @@ describe("Swagger", () => {
   });
 });
 
-describe("chatbot_webhook_logs em rejeição de auth", () => {
+describe("chatbot_webhook_logs em rejeição", () => {
   beforeAll(async () => {
     await initializeDatabase();
     await AppDataSource.query(`
@@ -478,5 +530,32 @@ describe("chatbot_webhook_logs em rejeição de auth", () => {
     expect(entry?.requestPayload).not.toContain(invalidKey);
     expect(entry?.requestPayload).not.toContain(INTEGRATION_KEY);
     expect(entry?.errorMessage).not.toContain(invalidKey);
+  });
+
+  it("persiste log de validação com session_id nulo e status 400", async () => {
+    const app = createApp();
+
+    const response = await withIntegrationKey(
+      request(app).post("/api/v1/integrations/typebot/leads"),
+    ).send({
+      ...validPayloadWithVehicle,
+      email: "invalido",
+    });
+
+    expect(response.status).toBe(400);
+
+    const repo = AppDataSource.getRepository(ChatbotWebhookLog);
+    const entry = await repo.findOne({
+      where: { correlationId: response.body.error.correlationId },
+    });
+
+    expect(entry).not.toBeNull();
+    expect(entry?.sessionId).toBeNull();
+    expect(entry?.eventType).toBe(
+      WEBHOOK_EVENT_TYPEBOT_LEAD_VALIDATION_FAILED,
+    );
+    expect(entry?.processingStatus).toBe(WEBHOOK_PROCESSING_REJECTED);
+    expect(entry?.statusCode).toBe(400);
+    expect(entry?.errorMessage).toBe("Dados inválidos");
   });
 });
