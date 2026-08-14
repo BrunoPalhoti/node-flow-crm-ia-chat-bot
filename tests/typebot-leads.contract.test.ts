@@ -116,6 +116,78 @@ describe("POST /api/v1/integrations/typebot/leads", () => {
     );
   });
 
+  it("rejeita campo obrigatório só com espaços", async () => {
+    const app = createApp();
+
+    const response = await withIntegrationKey(
+      request(app).post("/api/v1/integrations/typebot/leads"),
+    ).send({
+      ...validPayloadWithoutVehicle,
+      nome: "   ",
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.details.fieldErrors).toEqual(
+      expect.objectContaining({
+        nome: expect.arrayContaining(["Campo obrigatório"]),
+      }),
+    );
+  });
+
+  it("aceita campos no limite máximo", async () => {
+    const app = createApp();
+
+    const response = await withIntegrationKey(
+      request(app).post("/api/v1/integrations/typebot/leads"),
+    ).send({
+      ...validPayloadWithoutVehicle,
+      nome: "A".repeat(120),
+      submittedAt: "s".repeat(80),
+      estiloVeiculoDesejado: "E".repeat(120),
+      valorVeiculoDesejado: "V".repeat(120),
+      descricaoVeiculoDesejado: "D".repeat(1000),
+    });
+
+    expect(response.status).toBe(202);
+  });
+
+  it("rejeita campos acima do tamanho máximo sem truncar", async () => {
+    const app = createApp();
+
+    const response = await withIntegrationKey(
+      request(app).post("/api/v1/integrations/typebot/leads"),
+    ).send({
+      ...validPayloadWithoutVehicle,
+      nome: "A".repeat(121),
+      submittedAt: "s".repeat(81),
+      estiloVeiculoDesejado: "E".repeat(121),
+      valorVeiculoDesejado: "V".repeat(121),
+      descricaoVeiculoDesejado: "D".repeat(1001),
+      tipoVeiculo: "T".repeat(81),
+      marcaModelo: "M".repeat(81),
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe("VALIDATION_ERROR");
+    expect(response.body.error.details.fieldErrors).toEqual(
+      expect.objectContaining({
+        nome: expect.arrayContaining(["Campo excede o tamanho máximo"]),
+        submittedAt: expect.arrayContaining(["Campo excede o tamanho máximo"]),
+        estiloVeiculoDesejado: expect.arrayContaining([
+          "Campo excede o tamanho máximo",
+        ]),
+        valorVeiculoDesejado: expect.arrayContaining([
+          "Campo excede o tamanho máximo",
+        ]),
+        descricaoVeiculoDesejado: expect.arrayContaining([
+          "Campo excede o tamanho máximo",
+        ]),
+        tipoVeiculo: expect.arrayContaining(["Campo excede o tamanho máximo"]),
+        marcaModelo: expect.arrayContaining(["Campo excede o tamanho máximo"]),
+      }),
+    );
+  });
+
   it.each(["sim", "SIM", "Sim"])(
     "aceita temVeiculo=%s como Sim",
     async (temVeiculo) => {
@@ -189,6 +261,99 @@ describe("POST /api/v1/integrations/typebot/leads", () => {
         anoVeiculo: expect.any(Array),
       }),
     );
+  });
+
+  it("rejeita e-mail em formato inválido no campo email", async () => {
+    const app = createApp();
+
+    const response = await withIntegrationKey(
+      request(app).post("/api/v1/integrations/typebot/leads"),
+    ).send({
+      ...validPayloadWithoutVehicle,
+      email: "nao-e-um-email",
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.details.fieldErrors).toEqual(
+      expect.objectContaining({
+        email: expect.arrayContaining(["E-mail em formato inválido"]),
+      }),
+    );
+  });
+
+  it("aceita e-mail com letras maiúsculas sem converter", async () => {
+    const app = createApp();
+
+    const response = await withIntegrationKey(
+      request(app).post("/api/v1/integrations/typebot/leads"),
+    ).send({
+      ...validPayloadWithoutVehicle,
+      email: "Ana.Silva@Email.COM",
+    });
+
+    expect(response.status).toBe(202);
+  });
+
+  it("rejeita celular com poucos dígitos sem alterar o valor", async () => {
+    const app = createApp();
+
+    const response = await withIntegrationKey(
+      request(app).post("/api/v1/integrations/typebot/leads"),
+    ).send({
+      ...validPayloadWithoutVehicle,
+      celular: "(11) 123",
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.details.fieldErrors).toEqual(
+      expect.objectContaining({
+        celular: expect.arrayContaining(["Celular em formato inválido"]),
+      }),
+    );
+  });
+
+  it("aceita celular com máscara e 11 dígitos", async () => {
+    const app = createApp();
+
+    const response = await withIntegrationKey(
+      request(app).post("/api/v1/integrations/typebot/leads"),
+    ).send({
+      ...validPayloadWithoutVehicle,
+      celular: "(11) 99999-9999",
+    });
+
+    expect(response.status).toBe(202);
+  });
+
+  it("aceita temVeiculo = Não com detalhes do veículo vazios", async () => {
+    const app = createApp();
+
+    const response = await withIntegrationKey(
+      request(app).post("/api/v1/integrations/typebot/leads"),
+    ).send({
+      ...validPayloadWithoutVehicle,
+      tipoVeiculo: "",
+      marcaModelo: "   ",
+      anoVeiculo: "",
+    });
+
+    expect(response.status).toBe(202);
+    expect(response.body.data.accepted).toBe(true);
+  });
+
+  it("aceita temVeiculo = Não com detalhes do veículo preenchidos", async () => {
+    const app = createApp();
+
+    const response = await withIntegrationKey(
+      request(app).post("/api/v1/integrations/typebot/leads"),
+    ).send({
+      ...validPayloadWithoutVehicle,
+      tipoVeiculo: "Carro",
+      marcaModelo: "Fiat Uno",
+      anoVeiculo: "2010",
+    });
+
+    expect(response.status).toBe(202);
   });
 
   it("exige tipo/marcaModelo/ano quando temVeiculo = Sim", async () => {
