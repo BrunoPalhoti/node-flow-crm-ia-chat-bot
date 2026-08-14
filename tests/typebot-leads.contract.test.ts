@@ -558,4 +558,21 @@ describe("chatbot_webhook_logs em rejeição", () => {
     expect(entry?.statusCode).toBe(400);
     expect(entry?.errorMessage).toBe("Dados inválidos");
   });
+
+  it("não grava chatbot_webhook_logs em payload válido (202)", async () => {
+    const app = createApp();
+
+    const response = await withIntegrationKey(
+      request(app).post("/api/v1/integrations/typebot/leads"),
+    ).send(validPayloadWithoutVehicle);
+
+    expect(response.status).toBe(202);
+
+    const repo = AppDataSource.getRepository(ChatbotWebhookLog);
+    const entries = await repo.find({
+      where: { correlationId: response.body.correlationId },
+    });
+
+    expect(entries).toHaveLength(0);
+  });
 });
