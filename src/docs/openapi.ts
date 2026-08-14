@@ -115,7 +115,12 @@ export const openApiDocument = {
           "Exige o header X-Integration-Key com o valor de TYPEBOT_WEBHOOK_SECRET. " +
           "Campos obrigatórios: submittedAt, nome, celular, email, temVeiculo, " +
           "estiloVeiculoDesejado, valorVeiculoDesejado, descricaoVeiculoDesejado. " +
-          "Quando temVeiculo = Sim, também são obrigatórios: tipoVeiculo, marcaModelo e anoVeiculo. " +
+          "temVeiculo aceita variações de caixa e acento (sim, NAO, não) e é normalizado para Sim ou Não. " +
+          "Quando temVeiculo = Sim, também são obrigatórios: tipoVeiculo, marcaModelo e anoVeiculo " +
+          "(ano: somente dígitos, 1900 até ano UTC + 1, sem correção automática). " +
+          "Quando temVeiculo = Não, os detalhes do veículo podem vir vazios ou omitidos. " +
+          "celular: 10 a 13 dígitos (máscara permitida). email: formato básico, sem lowercase nesta etapa. " +
+          "Payload inválido retorna 400 com erros por campo e é auditado em chatbot_webhook_logs. " +
           "Campos futuros podem ser enviados, mas não são obrigatórios. " +
           "Mudanças incompatíveis devem usar uma nova versão da rota.",
         operationId: "createTypebotLeadV1",
@@ -163,7 +168,8 @@ export const openApiDocument = {
             },
           },
           "400": {
-            description: "Erro de validação do contrato",
+            description:
+              "Erro de validação do contrato (erros por campo). Auditado em chatbot_webhook_logs.",
             content: {
               "application/json": {
                 schema: {
@@ -215,56 +221,70 @@ export const openApiDocument = {
         properties: {
           submittedAt: {
             type: "string",
+            maxLength: 80,
             description: "Data/hora da submissão no formato livre do Typebot",
             example: "7 de ago., 10:23",
           },
           nome: {
             type: "string",
+            maxLength: 120,
             description: "Nome do lead",
             example: "Bruno",
           },
           celular: {
             type: "string",
-            description: "Telefone do lead (será normalizado para dígitos)",
+            maxLength: 32,
+            description:
+              "Telefone do lead. Formato básico: 10 a 13 dígitos após remover não dígitos. Máscara permitida. Normalização para só dígitos em etapa posterior.",
             example: "(11) 99999-9999",
           },
           email: {
             type: "string",
-            description: "E-mail do lead (será normalizado para minúsculas)",
+            format: "email",
+            maxLength: 254,
+            description:
+              "E-mail do lead (formato básico). Normalização para minúsculas em etapa posterior.",
             example: "bruno@email.com",
           },
           temVeiculo: {
             type: "string",
             enum: ["Sim", "Não"],
             description:
-              "Indica se o cliente possui veículo. Quando Sim, tipoVeiculo, marcaModelo e anoVeiculo passam a ser obrigatórios.",
+              "Indica se o cliente possui veículo. Aceita variações de caixa e acento (sim, NAO, não) e normaliza para Sim ou Não. Quando Sim, tipoVeiculo, marcaModelo e anoVeiculo passam a ser obrigatórios.",
           },
           tipoVeiculo: {
             type: "string",
-            description: "Obrigatório somente quando temVeiculo = Sim",
+            maxLength: 80,
+            description:
+              "Obrigatório somente quando temVeiculo = Sim. Com Não, vazio ou omitido é aceito.",
             example: "Carro",
           },
           marcaModelo: {
             type: "string",
+            maxLength: 80,
             description:
-              "Marca e modelo juntos. Não é separado automaticamente. Obrigatório somente quando temVeiculo = Sim",
+              "Marca e modelo juntos. Não é separado automaticamente. Obrigatório somente quando temVeiculo = Sim. Com Não, vazio ou omitido é aceito.",
             example: "Chevrolet Onix Plus",
           },
           anoVeiculo: {
             type: "string",
-            description: "Obrigatório somente quando temVeiculo = Sim",
+            description:
+              "Obrigatório somente quando temVeiculo = Sim. Deve ser string só de dígitos (ex.: 2022), inteiro entre 1900 e (ano UTC + 1). Valores como 22 não são expandidos.",
             example: "2022",
           },
           estiloVeiculoDesejado: {
             type: "string",
+            maxLength: 120,
             example: "SUV",
           },
           valorVeiculoDesejado: {
             type: "string",
+            maxLength: 120,
             example: "R$ 80 a 120 mil",
           },
           descricaoVeiculoDesejado: {
             type: "string",
+            maxLength: 1000,
             example: "Quero um carro econômico e confortável para viajar.",
           },
         },
