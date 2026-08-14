@@ -1,3 +1,5 @@
+import { normalizePhoneDigits } from "../normalize/phone";
+
 const EMAIL_KEYS = new Set([
   "email",
   "e-mail",
@@ -51,7 +53,7 @@ export function maskEmail(value: unknown): string {
  * Oculta telefone completo: ***1234 (últimos 4 dígitos)
  */
 export function maskPhone(value: unknown): string {
-  const digits = String(value ?? "").replace(/\D/g, "");
+  const digits = normalizePhoneDigits(String(value ?? ""));
 
   if (digits.length < 4) {
     return "[REDACTED]";

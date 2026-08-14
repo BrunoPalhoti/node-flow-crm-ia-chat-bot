@@ -6,11 +6,15 @@ import {
   type TypebotLeadAcceptedResponse,
   typebotLeadRequestSchema,
 } from "./typebot-lead.schema";
+import { mapTypebotLeadNormalizedFields } from "./typebot-lead-normalize";
 
 export const createTypebotLead: RequestHandler = async (req, res, next) => {
   try {
     const leadInput = typebotLeadRequestSchema.parse(req.body);
+    const normalizedFields = mapTypebotLeadNormalizedFields(req.body, leadInput);
+
     console.log("leadInput:", leadInput);
+    console.log("normalizedFields:", normalizedFields);
 
     const payload = apiSuccessResponse<TypebotLeadAcceptedResponse>(
       {

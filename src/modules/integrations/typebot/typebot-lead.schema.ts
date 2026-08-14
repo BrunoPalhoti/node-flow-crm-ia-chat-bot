@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { utcCalendarYear } from "../../../shared/date/utc";
+import { foldSimNaoKey } from "../../../shared/normalize";
 
 const FIELD_TOO_LONG = "Campo excede o tamanho máximo";
 const EMAIL_INVALID = "E-mail em formato inválido";
@@ -29,17 +30,13 @@ function optionalTrimmedString(max: number) {
 }
 
 function canonicalizeTemVeiculo(value: string): "Sim" | "Não" | string {
-  const normalized = value
-    .trim()
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "")
-    .toLowerCase();
+  const key = foldSimNaoKey(value);
 
-  if (normalized === "sim") {
+  if (key === "sim") {
     return "Sim";
   }
 
-  if (normalized === "nao") {
+  if (key === "nao") {
     return "Não";
   }
 
