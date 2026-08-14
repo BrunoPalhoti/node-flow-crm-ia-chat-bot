@@ -77,23 +77,23 @@ Resposta esperada (`HTTP 200`):
 
 `POST /api/v1/integrations/typebot/leads`
 
-Captura versionada do lead enviado pelo Typebot. Exige o header `X-Integration-Key` com o valor de `TYPEBOT_WEBHOOK_SECRET` (ausência ou valor inválido → `401`). A chave nunca é ecoada em logs, payloads persistidos ou respostas. Propriedades sem espaço e sem acento. Campos futuros podem ser enviados, mas **não** são obrigatórios. Mudanças incompatíveis devem usar nova versão da rota (ex.: `/api/v2/...`).
+Captura versionada do lead enviado pelo Typebot. Exige o header `X-Integration-Key` com o valor de `TYPEBOT_WEBHOOK_SECRET` (ausência ou valor inválido → `401`). A chave nunca é ecoada em logs, payloads persistidos ou respostas. Propriedades sem espaço e sem acento. Campos futuros podem ser enviados, mas **não** são obrigatórios. Payload inválido → `400` com erros por campo (`details.fieldErrors`); a rejeição é auditada em `chatbot_webhook_logs` (nenhuma tabela de negócio). Mudanças incompatíveis devem usar nova versão da rota (ex.: `/api/v2/...`).
 
 ### Campos
 
-| Campo | Obrigatório | Observação |
-| ----- | ----------- | ---------- |
-| `submittedAt` | Sim | Formato livre do Typebot |
-| `nome` | Sim | |
-| `celular` | Sim | Normalização para dígitos em etapa posterior |
-| `email` | Sim | Normalização para minúsculas em etapa posterior |
-| `temVeiculo` | Sim | `Sim` ou `Não` |
-| `tipoVeiculo` | Condicional | Obrigatório quando `temVeiculo = Sim` |
-| `marcaModelo` | Condicional | Obrigatório quando `temVeiculo = Sim` |
-| `anoVeiculo` | Condicional | Obrigatório quando `temVeiculo = Sim` |
-| `estiloVeiculoDesejado` | Sim | |
-| `valorVeiculoDesejado` | Sim | |
-| `descricaoVeiculoDesejado` | Sim | |
+| Campo | Obrigatório | Tamanho máx. | Observação |
+| ----- | ----------- | ------------ | ---------- |
+| `submittedAt` | Sim | 80 | Formato livre do Typebot |
+| `nome` | Sim | 120 | Vazio (só espaços) é rejeitado |
+| `celular` | Sim | 32 | Formato básico: 10 a 13 dígitos (máscara permitida). Normalização para só dígitos em etapa posterior |
+| `email` | Sim | 254 | Formato básico de e-mail. Normalização para minúsculas em etapa posterior |
+| `temVeiculo` | Sim | — | Aceita variações de caixa/acento (`sim`, `NAO`, `não`…) e normaliza para `Sim` ou `Não` |
+| `tipoVeiculo` | Condicional | 80 | Obrigatório quando `temVeiculo = Sim`. Com `Não`, vazio ou omitido é aceito |
+| `marcaModelo` | Condicional | 80 | Obrigatório quando `temVeiculo = Sim`. Com `Não`, vazio ou omitido é aceito |
+| `anoVeiculo` | Condicional | — | Com `Sim`: string só de dígitos, inteiro entre 1900 e (ano UTC + 1). Não corrige `22` → `2022` |
+| `estiloVeiculoDesejado` | Sim | 120 | |
+| `valorVeiculoDesejado` | Sim | 120 | |
+| `descricaoVeiculoDesejado` | Sim | 1000 | |
 
 ### Exemplo
 
@@ -135,11 +135,18 @@ Erro de validação (`HTTP 400`):
   "error": {
     "code": "VALIDATION_ERROR",
     "message": "Dados inválidos",
-    "details": {},
+    "details": {
+      "formErrors": [],
+      "fieldErrors": {
+        "email": ["E-mail em formato inválido"]
+      }
+    },
     "correlationId": "..."
   }
 }
 ```
+
+A rejeição de validação (`400`) e a de autenticação (`401`) geram linha em `chatbot_webhook_logs`. Sucesso (`202`) ainda não persiste cadastro de lead.
 
 ## Variáveis de ambiente
 

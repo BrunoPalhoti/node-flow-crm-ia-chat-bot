@@ -7,6 +7,10 @@ export function nowUtc(): Date {
   return new Date();
 }
 
+export function utcCalendarYear(date: Date = nowUtc()): number {
+  return date.getUTCFullYear();
+}
+
 export function toUtcIsoString(date: Date = nowUtc()): string {
   return date.toISOString();
 }

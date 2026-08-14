@@ -7,17 +7,26 @@ import { ChatbotWebhookLog } from "./entities/chatbot-webhook-log.entity";
 export const WEBHOOK_EVENT_TYPEBOT_LEAD_UNAUTHORIZED =
   "typebot.lead.unauthorized" as const;
 
+export const WEBHOOK_EVENT_TYPEBOT_LEAD_VALIDATION_FAILED =
+  "typebot.lead.validation_failed" as const;
+
 export const WEBHOOK_PROCESSING_REJECTED = "rejected" as const;
 
-export type RecordUnauthorizedWebhookInput = {
+type RecordRejectedWebhookInput = {
   correlationId: string;
   requestBody: unknown;
   statusCode: number;
   errorMessage: string;
+  eventType: string;
 };
 
-export async function recordUnauthorizedWebhook(
-  input: RecordUnauthorizedWebhookInput,
+export type RecordUnauthorizedWebhookInput = Omit<
+  RecordRejectedWebhookInput,
+  "eventType"
+>;
+
+async function recordRejectedWebhook(
+  input: RecordRejectedWebhookInput,
 ): Promise<void> {
   if (!AppDataSource.isInitialized) {
     logger.warn(
@@ -30,7 +39,7 @@ export async function recordUnauthorizedWebhook(
   const log = new ChatbotWebhookLog();
   log.id = randomUUID();
   log.sessionId = null;
-  log.eventType = WEBHOOK_EVENT_TYPEBOT_LEAD_UNAUTHORIZED;
+  log.eventType = input.eventType;
   log.correlationId = input.correlationId;
   log.requestPayload = JSON.stringify(input.requestBody ?? {});
   log.responsePayload = null;
@@ -47,4 +56,22 @@ export async function recordUnauthorizedWebhook(
       "Failed to persist chatbot_webhook_logs entry",
     );
   }
+}
+
+export async function recordUnauthorizedWebhook(
+  input: RecordUnauthorizedWebhookInput,
+): Promise<void> {
+  await recordRejectedWebhook({
+    ...input,
+    eventType: WEBHOOK_EVENT_TYPEBOT_LEAD_UNAUTHORIZED,
+  });
+}
+
+export async function recordValidationFailedWebhook(
+  input: RecordUnauthorizedWebhookInput,
+): Promise<void> {
+  await recordRejectedWebhook({
+    ...input,
+    eventType: WEBHOOK_EVENT_TYPEBOT_LEAD_VALIDATION_FAILED,
+  });
 }
